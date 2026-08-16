@@ -71,6 +71,52 @@ Nazwa hosta docelowego przekazywana jest dalej jako domena i nie jest
 rozwiązywana lokalnie — inaczej zapytanie DNS wyszłoby poza tunel i zdradziło
 cel połączenia mimo poprawnie działającego proxy.
 
+## Wdrożenie w kontenerze
+
+Na Apple silicon, pod natywnym `container`. Obraz jest linuksowy i ciągnie
+własną binarkę wireproxy — ta z `~/.mullid/bin/` jest zbudowana pod darwina
+i w kontenerze bezużyteczna, dlatego ścieżkę nadpisuje `MULLID_WIREPROXY_BIN`.
+
+```bash
+python3 setup.py        # najpierw na hoście: rejestruje klucz
+./container-deploy.sh   # buduje obraz i (re)startuje kontener
+```
+
+`setup.py` zostaje na hoście, bo woła `mullvad account get` i `openssl`.
+Kontener dostaje gotowy `~/.mullid` jako wolumen — razem z `state.json`,
+więc przypisania profili przeżywają przebudowę obrazu i restart kontenera.
+
+Kontener nie potrzebuje żadnych uprawnień specjalnych: wireproxy działa
+w całości w przestrzeni użytkownika, więc ani `/dev/net/tun`, ani `NET_ADMIN`,
+ani trybu uprzywilejowanego.
+
+### Zmienne środowiskowe
+
+| Zmienna | Domyślnie | Znaczenie |
+|---|---|---|
+| `MULLID_BIND` | `127.0.0.1` | adres nasłuchu proxy i control API |
+| `MULLID_WIREPROXY_BIN` | `~/.mullid/bin/wireproxy` | ścieżka do binarki wireproxy |
+| `MULLID_HOME` | `~/.mullid` | katalog stanu |
+
+Pusta wartość `MULLID_BIND` traktowana jest jak brak — literówka w skrypcie
+wdrożeniowym daje bezpieczny domyślny nasłuch na pętli zwrotnej, a nie na
+wszystkim.
+
+### Autostart
+
+`com.fran.mullid-container.plist` w `~/Library/LaunchAgents/` startuje
+`container system start` i `container start mullid` przy logowaniu.
+
+### Ostrzeżenie o wystawieniu
+
+`container-deploy.sh` publikuje porty na `0.0.0.0`, czyli na całą sieć
+lokalną. **Proxy nie sprawdza hasła** — pole hasła istnieje tylko dlatego,
+że wymagają go klienci HTTP, a nazwa profilu to pole użytkownika. Każdy,
+kto sięgnie tego portu, wyjdzie na cudzym koncie Mullvad, tworząc sobie
+dowolny profil samą nazwą. Jest to świadomy wybór właściciela tej instalacji,
+sensowny wyłącznie w zaufanej sieci. Żeby ograniczyć dostęp do samego hosta,
+zmień publikację na `127.0.0.1:8888:8888` i sięgaj z zewnątrz tunelem SSH.
+
 ## Testy
 
 ```bash

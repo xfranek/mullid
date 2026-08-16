@@ -13,6 +13,9 @@ relays.json
 bin/
 wireproxy
 
+# logi wdrozeniowe
+container-boot.log
+
 # python
 __pycache__/
 *.pyc

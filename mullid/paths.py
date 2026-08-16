@@ -9,8 +9,12 @@ jednego systemu plikow.
 from __future__ import annotations
 
 import json
+import logging
 import os
+import stat
 from pathlib import Path
+
+log = logging.getLogger("mullid.paths")
 
 _DEFAULT_HOME = Path.home() / ".mullid"
 
@@ -18,7 +22,19 @@ _DEFAULT_HOME = Path.home() / ".mullid"
 def mullid_dir() -> Path:
     d = Path(os.environ.get("MULLID_HOME", _DEFAULT_HOME))
     d.mkdir(parents=True, exist_ok=True)
-    d.chmod(0o700)
+    try:
+        d.chmod(0o700)
+    except PermissionError:
+        # Katalog bywa wolumenem zamontowanym z hosta do kontenera — wtedy
+        # chmod jest niedozwolony, a uprawnienia pochodza z hosta. Nie
+        # przerywamy startu, ale nie przemilczamy zbyt szerokich uprawnien.
+        mode = stat.S_IMODE(d.stat().st_mode)
+        if mode & 0o077:
+            log.warning(
+                "katalog stanu %s ma uprawnienia %s i nie da sie ich zawezic",
+                d,
+                oct(mode),
+            )
     return d
 
 
@@ -39,6 +55,11 @@ def wireproxy_conf_path() -> Path:
 
 
 def wireproxy_bin_path() -> Path:
+    # W obrazie kontenera binarka jest linuksowa i lezy poza ~/.mullid,
+    # ktory montujemy z hosta razem z buildem darwin.
+    override = os.environ.get("MULLID_WIREPROXY_BIN", "").strip()
+    if override:
+        return Path(override)
     return mullid_dir() / "bin" / "wireproxy"
 
 
