@@ -1,3 +1,6 @@
+# dokumentacja robocza — zostaje lokalnie, nie idzie na remote
+docs/superpowers/
+
 # sekrety — klucz WireGuard, token, numer konta
 *.conf
 !wireproxy.conf.example
