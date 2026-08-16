@@ -1,0 +1,19 @@
+# sekrety — klucz WireGuard, token, numer konta
+*.conf
+!wireproxy.conf.example
+wg.json
+state.json
+relays.json
+.mullid/
+
+# binarki
+bin/
+wireproxy
+
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+.DS_Store
