@@ -42,8 +42,8 @@ Ustalone pomiarem na maszynie docelowej, nie założone:
 
 | Element | Stan |
 |---|---|
-| `mullvad` CLI | 2026.1, zalogowany jako `Major Puffer` |
-| Konto | ważne do 2026-09-13, 3 z 5 urządzeń zajęte |
+| `mullvad` CLI | 2026.1, aplikacja zalogowana |
+| Konto | aktywne, wolne sloty na urządzenia |
 | Relaye WireGuard | 276 |
 | Python | 3.14.6 |
 | OpenSSL | 3.6.2, X25519 obecny (DER 48 B priv / 44 B pub) |
